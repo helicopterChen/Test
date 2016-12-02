@@ -12,13 +12,13 @@ end
 
 local _NOW_TIME = 0
 function AppBase:DefaultRun()
-	local function mainLoopCallback()
+	local function mainLoopCallback( sName )
 		_NOW_TIME = os.clock()
 		self.Update( self, _NOW_TIME - self.m_nLastUpdateTime )
 		self.m_nLastUpdateTime = _NOW_TIME
 	end
-	self.m_oTimerManager:SetTimer( self.m_nUpdateDeltaTime, mainLoopCallback )
-	self.m_oTimerManager:Run()
+	self.m_oTimerManager:SetTimer( "MAIN_LOOP_TIMER", self.m_nUpdateDeltaTime, mainLoopCallback )
+	iup.MainLoop()
 end
 
 function AppBase:SetUpdateRate( nRate )

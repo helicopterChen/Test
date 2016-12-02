@@ -1,5 +1,6 @@
 _G.ENGINE_BASE = cc.load( "EngineBase" )
 require("app.init")
+local Editor = import(".Editor")
 
 local MyApp = class("MyApp", _G.ENGINE_BASE.AppBase )
 
@@ -9,6 +10,7 @@ end
 
 function MyApp:Run()
     self:SetUpdateRate(20)
+    Editor:new():Run()
     self:DefaultRun()
 end
 
