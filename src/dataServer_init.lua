@@ -12,9 +12,8 @@ function GET_FULL_FILE_PATH( sPath )
 	sPath = string.gsub( sPath, "//", '/' )
 	return sPath
 end
-
 require "functions"
 require "package_support"
 
-require "app.config"
-require "app.main"
+require "dataServer.config"
+require "dataServer.main"

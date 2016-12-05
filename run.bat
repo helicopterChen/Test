@@ -1,2 +1,1 @@
-lua ./src/init.lua
-PAUSE
+lua ./src/dataServer_init.lua
