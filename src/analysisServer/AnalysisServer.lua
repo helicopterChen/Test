@@ -1,5 +1,5 @@
 print("AnalysisServer")
-_G.ENGINE_BASE = cc.load( "EngineBase" )
+_G.ENGINE_BASE = cc.load( "EngineBase" ) 
 require("analysisServer.init")
 local TableUtility = _G.ENGINE_BASE.TableUtility
 local AnalysisServer = class("AnalysisServer", _G.ENGINE_BASE.AppBase )
