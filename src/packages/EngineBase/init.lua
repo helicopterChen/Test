@@ -3,6 +3,7 @@ local _M = {}
 _M.AppBase 			= import( ".AppFrame.AppBase" )
 _M.cDataManager 	= import( ".AppFrame.cDataManager" )
 ---------------------------------------------------------
+					  import( ".Utility.CodingHelper" )
 _M.DataQueue 		= import( ".Utility.DataQueue" )
 _M.TableUtility 	= import( ".Utility.TableUtility" )
 _M.TimerManager 	= import( ".Utility.TimerManager" )

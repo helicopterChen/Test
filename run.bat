@@ -1,1 +1,1 @@
-lua ./src/dataServer_init.lua
+lua ./src/init.lua

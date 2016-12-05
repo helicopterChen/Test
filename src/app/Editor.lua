@@ -85,19 +85,23 @@ function Editor:Run()
 			end
 		end
 	end
-
+	local tNodeData = {}
 	local tAllStockConf = GAME_APP.m_oDataManager:GetDataByName( "AllStockConf" )
 	for i, v in pairs(tAllStockConf) do
-		oTree.addleaf = string.format( "%s(%s)", v.code, v.name )
+		table.insert( tNodeData, v )
+	end	
+	table.sort( tNodeData, function(a,b) return tonumber(a.code) > tonumber(b.code) end )
+	for i, v in pairs(tNodeData) do
+		oTree.addleaf = string.format( "%s(%s)", v.code, UTF8_TO_ASCII(v.name) )
 	end
-	local nCount = 0
-	for i, v in pairs(tAllStockConf) do
-		RequestStocksData( _code_to_symbol(v.code) )
-		nCount = nCount + 1
-		if nCount % 3 == 0 then
-			task.sleep( 750 )
-		end
-	end
+	-- local nCount = 0
+	-- for i, v in pairs(tAllStockConf) do
+	-- 	RequestStocksData( _code_to_symbol(v.code) )
+	-- 	nCount = nCount + 1
+	-- 	if nCount % 3 == 0 then
+	-- 		task.sleep( 750 )
+	-- 	end
+	-- end
 end
 
 function _code_to_symbol( sCode )
