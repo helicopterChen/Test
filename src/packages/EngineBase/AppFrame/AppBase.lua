@@ -1,13 +1,18 @@
 local AppBase = class("AppBase")
 local TimerManager = import( "..Utility.TimerManager" )
+local cDataManager = import( ".cDataManager" )
 
 function AppBase:ctor(appName, packageRoot)
 	_G.GAME_APP = self
+	self.m_oDataManager = cDataManager:GetInstance()
 	self.m_oTimerManager = TimerManager:GetInstance()
 	self.m_sAppName = appName
 	self.m_nLastUpdateTime = 0
 	self.m_nUpdateDeltaTime = 20
     self.m_sPackageRoot = packageRoot or "app"
+end
+
+function AppBase:InitConfig()
 end
 
 local _NOW_TIME = 0

@@ -50,20 +50,15 @@ function Editor:Run()
 	local dlg = iup.dialog{tree ; title = "TableTree result", size = "200x200", menu = menu }
 	dlg:showxy(iup.CENTER,iup.CENTER)
 
-	local t = {
-	  {
-	    "Horse",
-	    "Whale";
-	    branchname = "Mammals"
-	  },
-	  {
-	    "Shrimp",
-	    "Lobster";
-	    branchname = "Crustaceans"
-	  };
-	  branchname = "Animals"
+	local tListData = 
+	{
+		branchname = "stocks"
 	}
-	iup.TreeAddNodes(tree, t)	
+	local tAllStockConf = GAME_APP.m_oDataManager:GetDataByName( "AllStockConf" )
+	for i, v in pairs(tAllStockConf) do
+		table.insert(tListData, string.format( "%s(%s)", v.code,v.name) )
+	end
+	iup.TreeAddNodes(tree, tListData)	
 end
 
 return Editor

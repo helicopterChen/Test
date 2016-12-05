@@ -8,7 +8,9 @@ package.path = string.format("%s;%s?.lua;%s?/init.lua", PACK_PATH, SRC_FILE_PATH
 
 function GET_FULL_FILE_PATH( sPath )
 	local sFullPath = string.format( "%s/%s", RES_FILE_PATH, sPath )
-	return string.gsub( sFullPath, "\\", '/' )
+	local sPath = string.gsub( sFullPath, "\\", '/' )
+	sPath = string.gsub( sPath, "//", '/' )
+	return sPath
 end
 
 require "config"
