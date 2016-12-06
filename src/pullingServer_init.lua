@@ -15,16 +15,16 @@ end
 
 __LOG_STR_MAP_ = {}
 function SYS_LOG( ... )
-	print( os.date(), ... )
 	local logStr = "" .. os.date()
 	for k,v in ipairs({...}) do
 		logStr = logStr .. tostring( v ) .. "\t"
 	end
+	print(logStr)
 	__LOG_STR_MAP_[#__LOG_STR_MAP_+1] = logStr
 end
 
 require "functions"
 require "package_support"
 
-require "app.config"
-require "app.main"
+require "pullingServer.config"
+require "pullingServer.main"

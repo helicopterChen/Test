@@ -1,5 +1,4 @@
 DROP TABLE IF EXISTS stocks;
-
 CREATE TABLE stocks(
 	code VARCHAR(16),
 	name VARCHAR(32),
@@ -23,9 +22,14 @@ CREATE TABLE stocks(
 	profit DECIMAL(16,3),
 	gpr DECIMAL(16,3),
 	npr DECIMAL(16,3),
-	holders DECIMAL(16,3)
+	holders DECIMAL(16,3),
+	PRIMARY KEY(code)
 );
 
-INSERT INTO stocks(totalAssets,rev,code,outstanding,timeToMarket,bvps,totals,liquidAssets,area,reserved,holders,perundp,npr,fixedAssets,profit,pb,gpr,name,reservedPerShare,industry,esp,pe,undp) VALUES('131237.2','-11.14','600107','3.6','199
-71106','1.44','3.6','86535.82','ºþ±±','15956.38','23686','-0.07','-3.51','15406.
-82','-458.2','13.51','36.83','ÃÀ¶ûÑÅ','0.44','·þÊÎ','-0.029','0','-2694.3');
+DROP TABLE IF EXISTS data_update;
+CREATE TABLE data_update(
+	code VARCHAR(16),
+	brief_data_update_time DATE,
+	history_data_update_time DATE,
+	PRIMARY KEY(code)
+);

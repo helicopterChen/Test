@@ -132,7 +132,15 @@ function JsonParser.ToStructList(fileName , needP2K)
 	-- caosi_debug("jsonStr", jsonStr)	
 	--if not jsonStr then return nil end
 	--local jsont = Json.Decode(jsonStr)
-	local fileData = cc.HelperFunc:getFileData( "res/" .. fileName ) or ""
+	local fileData = ""
+	local filePath = GET_FULL_FILE_PATH( fileName )
+	if filePath ~= nil then
+		local oFile = io.open( filePath, "r" )
+		if oFile ~= nil then
+			fileData = oFile:read( "*a" ) or "{}"
+			oFile:close()
+		end
+	end
     local jsont = Json.Decode(fileData)
 
 	local types = jsont.types

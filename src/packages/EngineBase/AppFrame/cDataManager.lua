@@ -40,7 +40,10 @@ function CDataManager:LoadCsvData( nDataBegin, sFileName, sDataName, sKeyAttri, 
 	local tCsvData = {}
 	for i, v in ipairs( tAttriData ) do
 		if v[sKeyAttri] ~= nil then
-			local nKeyVal = tonumber(v[sKeyAttri])
+			local nKeyVal = nil
+			if tDataType[i] == "number" then
+				nKeyVal = tonumber(v[sKeyAttri])
+			end
 			if nKeyVal ~= nil then
 				tCsvData[nKeyVal] = v
 			else
@@ -102,11 +105,23 @@ function CDataManager:LoadJsonData( sFileName, sDataName, bNeedConvert, bIsArray
 	return tJsonData
 end
 
+function CDataManager:SaveJsonData( sFileName, tData )
+
+end
+
 function CDataManager:GetJsonFileData( sFileName )
 	if self.m_tJsonFileDataMap[ sFileName ] ~= nil then
 		return self.m_tJsonFileDataMap[ sFileName ]
 	end
-	local sFileStr = GET_FULL_FILE_PATH( sFileName )
+	local sFileStr = ""
+	local sFilePath = GET_FULL_FILE_PATH( sFileName )
+	if sFilePath ~= nil then
+		local oFile = io.open( sFilePath, "r" )
+		if oFile ~= nil then
+			sFileStr = oFile:read( "*a" ) or "{}"
+			oFile:close()
+		end
+	end
 	assert( sFileStr ~= nil )
 	local tJsonData = _G.JSON.Decode( sFileStr )
 	assert( tJsonData ~= nil )
