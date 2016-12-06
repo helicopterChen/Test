@@ -1,10 +1,22 @@
 local TimeUtility = _G.ENGINE_BASE.TimeUtility
 local TableUtility = _G.ENGINE_BASE.TableUtility
-local ltn12 = require("ltn12")
+local ltn12 = require "ltn12"
 local http = require "socket.http"
-local StockRequest = {}
+local task = require "task"
+local StockRequest = class( "StockRequest" )
 ---------------------------------------------------------------------------------------------------------------------------------------------------
-function StockRequest.SendStockListRequest()
+function StockRequest:ctor()
+	self.m_tRequestDataTasks = {}
+end
+
+function StockRequest:GetInstance()
+	if _G.__StockRequest == nil then
+		_G.__StockRequest = StockRequest:create()
+	end
+	return _G.__StockRequest
+end
+
+function StockRequest:SendStockListRequest()
 	SYS_LOG( "[Loading]: Sending stockList request." )
 	local nStockListUpdateTime = GAME_APP:GetServerConfVal( "stock_list_update_time" ) or 0
 	local tUpdateTimeData = TimeUtility.GetDateTimeEx( nStockListUpdateTime )
@@ -46,6 +58,49 @@ string,string,string,string,number,number,number,number,number,number,number,num
 			SYS_LOG( "[Loading]: Save Data To File: all_stocks.csv" )
 			GAME_APP:SetServerConfVal( "stock_list_update_time", os.time())
 		end
+	end
+end
+
+local __sHistoryDataScript = [[=
+	local http = require "socket.http"
+	local ltn12 = require("ltn12")
+	local sCode = arg[1]
+	local tTables = {}
+	local sUrl = string.format( "http://api.finance.ifeng.com/akdaily/?code=%s&type=last", sCode )
+	local r, c = http.request {
+		url = sUrl,
+		sink = ltn12.sink.table(tTables)
+	}
+	local s = table.concat(tTables)
+	local sPath = string.format("E:/Test/res/stocks_data/%s.json", sCode )
+	local oFile = io.open( sPath, "w" )
+	oFile:write(s)
+	oFile:close()
+	return 1
+]]
+
+function StockRequest:CodeToSymbol( sCode )
+	local sFirst = string.sub( sCode, 1, 1 )
+	local sRet = ""
+	if sFirst == '5' or sFirst == '6' or sFirst == '9' then
+		sRet = string.format( 'sh%s', sCode )
+	else
+		sRet = string.format( 'sz%s', sCode )
+	end
+	return sRet
+end
+
+function StockRequest:SendStockHistoryDataRequest( oRequestQueue )
+	if #task.list() >= 75 then
+		return
+	end
+	local sCode = oRequestQueue:OutQueue()
+	if sCode == nil then
+		return
+	end
+	local sSymbolCode = self:CodeToSymbol( sCode )
+	if sSymbolCode ~= nil then
+		task.create( __sHistoryDataScript, { tostring(sSymbolCode) } ) 
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------------

@@ -1,6 +1,7 @@
 _G.ENGINE_BASE = cc.load( "EngineBase" )
 require("PullingServer.init")
 local TableUtility = _G.ENGINE_BASE.TableUtility
+local DataQueue = _G.ENGINE_BASE.DataQueue
 local PullingServer = class("PullingServer", _G.ENGINE_BASE.AppBase )
 local StockRequest = import( ".StockRequest" )
 local Json = _G.ENGINE_BASE.Json
@@ -8,14 +9,16 @@ SYS_LOG("[start] PullingServer")
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 function PullingServer:ctor()
     self.super.ctor(self)
+    self.m_oStockRequest = StockRequest:GetInstance()
     self.m_tServerConfigData = {}
     self.m_tDataUpdateMap = {}
+    self.m_tStockRequestQueue = DataQueue:create()
 end
 
 function PullingServer:Run()
-    self:SetUpdateRate(20)
+    self:SetUpdateRate(150)
     self:LoadServerConfig()
-    StockRequest.SendStockListRequest()
+    self.m_oStockRequest:SendStockListRequest()
     self:InitConfig()
     self:CheckDataAfterLoad()
     self:DefaultRun()
@@ -23,6 +26,7 @@ end
 
 function PullingServer:CheckDataAfterLoad()
 	self:SaveDataToJson( "pull_server_conf.json", self.m_tServerConfigData )
+
 end
 
 function PullingServer:GetServerConfData()
@@ -69,11 +73,26 @@ function PullingServer:LoadServerConfig()
 end
 
 function PullingServer:InitConfig()
+	SYS_LOG( "[Loading]: all_stocks.csv" )
 	self.m_oDataManager:LoadCsvData( 1, "all_stocks.csv", "AllStockConf", "code" )
+	local tAllStockConf = self.m_oDataManager:GetDataByName( "AllStockConf" )
+	if tAllStockConf ~= nil then
+		for i, v in pairs(tAllStockConf) do
+			self.m_tStockRequestQueue:InQueue( v.code )
+		end
+	end
+	SYS_LOG( "[Loading]: all_stocks.csv loaded" )
 end
 
 function PullingServer:Update( dt )
-
+	if self.m_oStockRequest ~= nil and self.m_tStockRequestQueue ~= nil then
+		local nCurLeftCount = self.m_tStockRequestQueue:Count()
+		if self.m_nLastLeftCount ~= nCurLeftCount and self.m_tStockRequestQueue:Count() % 50 == 0 then
+			SYS_LOG( string.format( "[Loading]: %s data request left", self.m_tStockRequestQueue:Count() ) )
+			self.m_nLastLeftCount = nCurLeftCount
+		end
+		self.m_oStockRequest:SendStockHistoryDataRequest( self.m_tStockRequestQueue )
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 return PullingServer
