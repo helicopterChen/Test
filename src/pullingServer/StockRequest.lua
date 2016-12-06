@@ -2,11 +2,13 @@ local TimeUtility = _G.ENGINE_BASE.TimeUtility
 local TableUtility = _G.ENGINE_BASE.TableUtility
 local ltn12 = require "ltn12"
 local http = require "socket.http"
+http.TIMEOUT = 720
 local task = require "task"
 local StockRequest = class( "StockRequest" )
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 function StockRequest:ctor()
-	self.m_tRequestDataTasks = {}
+	self.m_tDataUpdateMark = {}
+	self.m_nLoadedDataCount = 0
 end
 
 function StockRequest:GetInstance()
@@ -63,20 +65,28 @@ end
 
 local __sHistoryDataScript = [[=
 	local http = require "socket.http"
-	local ltn12 = require("ltn12")
-	local sCode = arg[1]
+	http.TIMEOUT = 720
+	local ltn12 = require "ltn12"
+	local task = require "task"
+	local sSymbolCode = tostring(arg[1])
+	local sCode = tostring(arg[2])
+	local nParentId = tonumber(arg[3])
 	local tTables = {}
-	local sUrl = string.format( "http://api.finance.ifeng.com/akdaily/?code=%s&type=last", sCode )
+	local sUrl = string.format( "http://api.finance.ifeng.com/akdaily/?code=%s&type=last", sSymbolCode )
 	local r, c = http.request {
 		url = sUrl,
-		sink = ltn12.sink.table(tTables)
+		sink = ltn12.sink.table(tTables),
 	}
+	if r ~= 1 or c ~= 200 then
+		task.post( nParentId, sCode, 0 )
+		return
+	end
 	local s = table.concat(tTables)
-	local sPath = string.format("E:/Test/res/stocks_data/%s.json", sCode )
+	local sPath = string.format("D:/Test/res/stocks_data/%s.json", string.sub(sCode,3,-1) )
 	local oFile = io.open( sPath, "w" )
 	oFile:write(s)
 	oFile:close()
-	return 1
+	task.post( nParentId, sCode, 1 )
 ]]
 
 function StockRequest:CodeToSymbol( sCode )
@@ -91,7 +101,7 @@ function StockRequest:CodeToSymbol( sCode )
 end
 
 function StockRequest:SendStockHistoryDataRequest( oRequestQueue )
-	if #task.list() >= 75 then
+	if #task.list() >= 100 then
 		return
 	end
 	local sCode = oRequestQueue:OutQueue()
@@ -100,7 +110,23 @@ function StockRequest:SendStockHistoryDataRequest( oRequestQueue )
 	end
 	local sSymbolCode = self:CodeToSymbol( sCode )
 	if sSymbolCode ~= nil then
-		task.create( __sHistoryDataScript, { tostring(sSymbolCode) } ) 
+		task.create( __sHistoryDataScript, { tostring(sSymbolCode), tostring("c_"..sCode), task.id() } ) 
+		local buf, flags, err = task.receive( 10 )
+		if buf ~= nil and flags ~= nil then
+			local bSucceed = (flags == 1)
+			local sCode = string.sub(buf, 3, -1 )
+			if bSucceed ~= true then
+				SYS_LOG( string.format( "[Loading]: failed request %s", sCode ) )
+				oRequestQueue:InQueue( sCode )
+			else
+				self.m_tDataUpdateMark[sCode] = os.time()
+				self.m_nLoadedDataCount = self.m_nLoadedDataCount + 1
+				if self.m_nLoadedDataCount % 10 == 0 then
+					GAME_APP:SetServerConfVal( "stock_update", self.m_tDataUpdateMark )
+					GAME_APP:SaveServerConfData()
+				end
+			end
+		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------------

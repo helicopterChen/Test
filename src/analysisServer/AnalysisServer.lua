@@ -3,9 +3,12 @@ _G.ENGINE_BASE = cc.load( "EngineBase" )
 require("analysisServer.init")
 local TableUtility = _G.ENGINE_BASE.TableUtility
 local AnalysisServer = class("AnalysisServer", _G.ENGINE_BASE.AppBase )
+local StrategyManager = import(".StrategyManager")
+local CSVLoader = _G.ENGINE_BASE.CSVLoader
 
 function AnalysisServer:ctor()
     self.super.ctor(self)
+    self.m_oStrategyManager = StrategyManager:GetInstance()
 end
 
 function AnalysisServer:Run()
@@ -16,21 +19,30 @@ end
 
 function AnalysisServer:InitConfig()
 	self.m_oDataManager:LoadCsvData( 1, "all_stocks.csv", "AllStockConf", "code" )
-	local tAllStockConf = self.m_oDataManager:GetDataByName( "AllStockConf" )
-	if tAllStockConf ~= nil then
-		local tSelection = {}
-		for i, v in pairs(tAllStockConf) do
-			if v.pb < 1.3 and v.pb > 0 and v.profit > 0.1 and v.rev > 0.1 and v.outstanding < 10 then
-				table.insert(tSelection, v)
-			end
-		end
-		for i, v in ipairs(tSelection) do
-			print( v.code, UTF8_TO_ASCII(v.name), v.pb, v.outstanding, v.rev, v.profit )
-		end
-	end
+	self.m_oDataManager:LoadCsvData( 1, "select_cond.csv", "SelectCondConf", "id" )
+	self.m_oStrategyManager:CreateStrategy( 10002 )
+	-- local tHeaderData, tData, tAttriData, tDataType, tChHeaderData = CSVLoader.ReadCsvFile( "all_stocks.csv", 1 )
+	-- local sHeaders1 = ""
+	-- local sHeaders2 = "\n"
+	-- for i, v in pairs(tHeaderData) do
+	-- 	if tDataType[i] == "number" then
+	-- 		sHeaders1 = sHeaders1 .. string.format("%s.min",v) .. "," .. string.format("%s.max",v) .. ","
+	-- 		sHeaders2 = sHeaders2 .. "number,number,"
+	-- 	else
+	-- 		sHeaders1 = sHeaders1 .. v .. ","
+	-- 		sHeaders2 = sHeaders2 .. "string,"
+	-- 	end
+	-- end
+	-- local sSaveStr = string.sub(sHeaders1,1,-2) .. string.sub(sHeaders2,1,-2)
+	-- local oFile = io.open( "D:/Test.csv", "w")
+	-- if oFile ~= nil then
+	-- 	oFile:write(sSaveStr)
+	-- 	oFile:close()
+	-- end
 end
 
 function AnalysisServer:Update( dt )
+	self.m_oStrategyManager:Update(dt)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 return AnalysisServer

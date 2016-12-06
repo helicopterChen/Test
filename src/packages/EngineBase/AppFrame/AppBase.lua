@@ -33,4 +33,8 @@ end
 function AppBase:Update( dt )
 end
 
+function AppBase:GetDataManager()
+	return self.m_oDataManager
+end
+
 return AppBase

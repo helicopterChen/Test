@@ -20,13 +20,12 @@ function PullingServer:Run()
     self:LoadServerConfig()
     self.m_oStockRequest:SendStockListRequest()
     self:InitConfig()
-    self:CheckDataAfterLoad()
+    self:SaveServerConfData()
     self:DefaultRun()
 end
 
-function PullingServer:CheckDataAfterLoad()
+function PullingServer:SaveServerConfData()
 	self:SaveDataToJson( "pull_server_conf.json", self.m_tServerConfigData )
-
 end
 
 function PullingServer:GetServerConfData()
@@ -70,6 +69,7 @@ end
 
 function PullingServer:LoadServerConfig()
 	self.m_tServerConfigData = self:LoadJsonData( "pull_server_conf.json" ) or {}
+	self.m_tDataUpdated = self.m_tServerConfigData.stock_update or {}
 end
 
 function PullingServer:InitConfig()
@@ -78,7 +78,9 @@ function PullingServer:InitConfig()
 	local tAllStockConf = self.m_oDataManager:GetDataByName( "AllStockConf" )
 	if tAllStockConf ~= nil then
 		for i, v in pairs(tAllStockConf) do
-			self.m_tStockRequestQueue:InQueue( v.code )
+			if self.m_tDataUpdated[tostring(v.code)] == nil then
+				self.m_tStockRequestQueue:InQueue( tostring(v.code) )
+			end
 		end
 	end
 	SYS_LOG( "[Loading]: all_stocks.csv loaded" )

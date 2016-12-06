@@ -52,6 +52,9 @@ function CSVLoader.ReadCsvFile( sFileName, nDataBeginLine )
 					local nPointPos = string.find( sAttriName, "%." )
 					local sTableName = string.sub( sAttriName, 1, nPointPos - 1)
 					local nIndex = tonumber(string.sub( sAttriName, nPointPos + 1, -1 ))
+					if nIndex == nil then
+						nIndex = string.sub( sAttriName, nPointPos + 1, -1 )
+					end
 					if tTempData[sTableName] == nil then
 						tTempData[sTableName] = {}
 					end

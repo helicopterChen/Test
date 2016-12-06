@@ -15,7 +15,7 @@ end
 
 __LOG_STR_MAP_ = {}
 function SYS_LOG( ... )
-	local logStr = "" .. os.date()
+	local logStr = "" .. os.date() .. ": "
 	for k,v in ipairs({...}) do
 		logStr = logStr .. tostring( v ) .. "\t"
 	end
