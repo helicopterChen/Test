@@ -1,2 +1,2 @@
-lua ./src/pullingServer_init.lua
+lua ./src/init.lua
 PAUSE

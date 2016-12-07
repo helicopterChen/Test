@@ -82,7 +82,7 @@ local __sHistoryDataScript = [[=
 		return
 	end
 	local s = table.concat(tTables)
-	local sPath = string.format("D:/Test/res/stocks_data/%s.json", string.sub(sCode,3,-1) )
+	local sPath = string.format("E:/Test/res/stocks_data/%s.json", string.sub(sCode,3,-1) )
 	local oFile = io.open( sPath, "w" )
 	oFile:write(s)
 	oFile:close()

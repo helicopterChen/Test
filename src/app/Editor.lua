@@ -36,6 +36,10 @@ end
 function Editor:Run()
 	local oTree = iup.tree{}
 
+	local ml = iup.multiline{expand="YES", value="", border="YES", size="400x100"}
+	local mat= iup.matrix{numlin=0, numcol=6, scrollbar="YES", widthdef=45}
+	mat.resizematrix = "YES"
+	mat.SORTSIGNn = "DOWN"
 
 	item_exit = iup.item {title = "Exit", key = "K_x"}
 
@@ -52,7 +56,8 @@ function Editor:Run()
 	-- Creates main menu with two submenus
 	menu = iup.menu {submenu_file}
 
-	local dlg = iup.dialog{oTree ; title = "TableTree result", size = "200x200", menu = menu }
+
+	local dlg = iup.dialog{ iup.hbox{ oTree, iup.frame{ mat, size="400x100"} }; title = "TableTree result", size = "600x200", menu = menu }
 	dlg:showxy(iup.CENTER,iup.CENTER)
 
 	oTree.m_sSelectName = ""
@@ -62,6 +67,14 @@ function Editor:Run()
 			oTree.m_sSelectName = oTree.name
 		end
 	end
+	mat:setcell(0,0,"")
+	mat:setcell(0,1,"date")
+	mat:setcell(0,2,"open")
+	mat:setcell(0,3,"close")
+	mat:setcell(0,4,"volume")
+	mat:setcell(0,5,"range")
+	mat:setcell(0,6,"change")
+
 	function oTree:executeleaf_cb()
 		local sName = oTree.m_sSelectName
 		if sName ~= nil then
@@ -70,17 +83,21 @@ function Editor:Run()
 				local sCode = tToken[1]
 				local sName = string.sub( tToken[2], 1, -2 )
 				if sCode ~= nil and sName ~= nil then
-					local tTables = {}
-					local sUrl = string.format( "http://api.finance.ifeng.com/akdaily/?code=%s&type=last", _code_to_symbol(sCode) )
-					local r, c = http.request {
-						url = sUrl,
-						sink = ltn12.sink.table(tTables)
-					}
-					local s = table.concat(tTables)
-					local sPath = GET_FULL_FILE_PATH( string.format("/stocks_data/%s.json", sCode ) )
-					local oFile = io.open( sPath, "w" )
-					oFile:write(s)
-					oFile:close()
+					GAME_APP:LoadStockHistoryData( sCode )
+					local tStockData = GAME_APP:GetStockHistoryData(sCode)
+					if tStockData ~= nil then
+						mat.NUMLIN = #tStockData + 1
+						local nSize = #tStockData + 1
+						for i, v in pairs(tStockData) do
+							mat:setcell( nSize-i,1,v[1])
+							mat:setcell( nSize-i,2,v[2])
+							mat:setcell( nSize-i,3,v[4])
+							mat:setcell( nSize-i,4,v[6])
+							mat:setcell( nSize-i,5,string.format("%s%%",v[8]) )
+							mat:setcell( nSize-i,6,v[7])
+						end
+					end
+					iup.Update(mat)
 				end
 			end
 		end
@@ -92,16 +109,8 @@ function Editor:Run()
 	end	
 	table.sort( tNodeData, function(a,b) return tonumber(a.code) > tonumber(b.code) end )
 	for i, v in pairs(tNodeData) do
-		oTree.addleaf = string.format( "%s(%s)", v.code, UTF8_TO_ASCII(v.name) )
+		oTree.addleaf = string.format( "%s(%s)", v.code, v.name )
 	end
-	-- local nCount = 0
-	-- for i, v in pairs(tAllStockConf) do
-	-- 	RequestStocksData( _code_to_symbol(v.code) )
-	-- 	nCount = nCount + 1
-	-- 	if nCount % 3 == 0 then
-	-- 		task.sleep( 750 )
-	-- 	end
-	-- end
 end
 
 function _code_to_symbol( sCode )
@@ -113,28 +122,6 @@ function _code_to_symbol( sCode )
 		sRet = string.format( 'sz%s', sCode )
 	end
 	return sRet
-end
-
-local sMyscript = [[=
-	local http = require "socket.http"
-	local ltn12 = require("ltn12")
-	local sCode = arg[1]
-	print(sCode)
-	local tTables = {}
-	local sUrl = string.format( "http://api.finance.ifeng.com/akdaily/?code=%s&type=last", sCode )
-	local r, c = http.request {
-		url = sUrl,
-		sink = ltn12.sink.table(tTables)
-	}
-	local s = table.concat(tTables)
-	local sPath = string.format("E:/Test/res/stocks_data/%s.json", sCode )
-	local oFile = io.open( sPath, "w" )
-	oFile:write(s)
-	oFile:close()
-]]
-
-function RequestStocksData( sCode )
-	task.create( sMyscript, { tostring(sCode) } ) 
 end
 
 return Editor
