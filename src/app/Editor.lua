@@ -7,6 +7,7 @@ local luaSqlite3 = require "luasql.sqlite3"
 http = require "socket.http"
 local ltn12 = require("ltn12")
 
+require( "iuplua_pplot"  )
 -- local ENV = assert(luasql.sqlite3())
 -- local conn = ENV:connect( GET_FULL_FILE_PATH("swc.db") )
 -- local res = assert(conn:execute( [[SELECT * FROM people;]] ) )
@@ -37,10 +38,17 @@ function Editor:Run()
 	local oTree = iup.tree{size="120x200"}
 	local ml = iup.multiline{expand="YES", value="", border="YES", size="500x200"}
 	local mat= iup.matrix{numlin=0, numcol=6, scrollbar="YES", widthdef=45}
-	local canvas = iup.canvas{size="480x200"}
+	--local canvas = iup.canvas{size="480x200"}
 	mat.resizematrix = "YES"
 	mat.SORTSIGNn = "DOWN"
 
+	plot = iup.pplot{TITLE = "A simple XY Plot",
+                    MARGINBOTTOM="35",
+                    MARGINLEFT="35",
+                    AXS_XLABEL="X",
+                    AXS_YLABEL="Y",
+                    size="480x200",
+                    }
 	item_exit = iup.item {title = "Exit", key = "K_x"}
 
 	function item_exit:action()
@@ -63,11 +71,25 @@ function Editor:Run()
 			oTree,
 			iup.vbox
 			{
-				canvas,
+				plot,
 				mat,
 			}
 		}
 	}
+	iup.PPlotBegin(plot,0)
+	local tPE = GAME_APP.m_tPE
+	if tPE ~= nil then
+		local tDraw ={}
+		for i,v in pairs(tPE) do
+			table.insert(tDraw,{i,v} )
+		end
+		table.sort(tDraw,function(a,b) return a[1] > b[1] end)
+		for i, v in pairs(tDraw) do
+			iup.PPlotAdd(plot,v[1],v[2])
+		end
+	end
+	iup.PPlotEnd(plot)
+
 	local dlg = iup.dialog{ frame; title = "TableTree result", size = "600x200", menu = menu }
 	dlg:showxy(iup.CENTER,iup.CENTER)
 

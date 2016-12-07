@@ -20,6 +20,37 @@ end
 
 function MyApp:InitConfig()
 	self.m_oDataManager:LoadCsvData( 1, "all_stocks.csv", "AllStockConf", "code" )
+
+	local tAllAttris = {}
+	local tAllStockConf = self.m_oDataManager:GetDataByName( "AllStockConf" )
+	if tAllStockConf ~= nil then
+		for i, v in pairs(tAllStockConf) do
+			for attri, val in pairs(v) do
+				if attri == "pb" then
+					if type(val) == "number" then
+						if tAllAttris[attri] == nil then
+							tAllAttris[attri] = {}
+						end
+						local tAttriStastics = tAllAttris[attri]
+						if tAttriStastics ~= nil then
+							val = val * 100
+							if val > 0 and val < 1000 then
+								if tAttriStastics[val] == nil then
+									tAttriStastics[val] = 1
+								else
+									tAttriStastics[val] = tAttriStastics[val] + 1
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+		self.m_tPE = tAllAttris.pb
+		local oFile = io.open( GET_FULL_FILE_PATH( "stastics.txt" ), "w" )
+		oFile:write(TableUtility.GetDataString(self.m_tPE) )
+		oFile:close()
+	end
 end
 
 function MyApp:GetStockHistoryData( sCode )
