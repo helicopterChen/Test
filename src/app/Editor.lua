@@ -95,6 +95,11 @@ function Editor:Run()
 							mat:setcell( nSize-i,4,v[6])
 							mat:setcell( nSize-i,5,string.format("%s%%",v[8]) )
 							mat:setcell( nSize-i,6,v[7])
+							if tonumber(v[8]) < 0 then
+								mat[string.format("bgcolor%s:5",i)] = "0 255 0"
+							else
+								mat[string.format("bgcolor%s:5",i)] = "255 0 0"
+							end
 						end
 					end
 					iup.Update(mat)
