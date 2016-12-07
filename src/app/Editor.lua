@@ -34,10 +34,10 @@ function Editor:Init()
 end
 
 function Editor:Run()
-	local oTree = iup.tree{}
-
-	local ml = iup.multiline{expand="YES", value="", border="YES", size="400x100"}
+	local oTree = iup.tree{size="120x200"}
+	local ml = iup.multiline{expand="YES", value="", border="YES", size="500x200"}
 	local mat= iup.matrix{numlin=0, numcol=6, scrollbar="YES", widthdef=45}
+	local canvas = iup.canvas{size="480x200"}
 	mat.resizematrix = "YES"
 	mat.SORTSIGNn = "DOWN"
 
@@ -56,8 +56,19 @@ function Editor:Run()
 	-- Creates main menu with two submenus
 	menu = iup.menu {submenu_file}
 
-
-	local dlg = iup.dialog{ iup.hbox{ oTree, iup.frame{ mat, size="400x100"} }; title = "TableTree result", size = "600x200", menu = menu }
+	local frame = iup.frame
+	{
+		iup.hbox
+		{
+			oTree,
+			iup.vbox
+			{
+				canvas,
+				mat,
+			}
+		}
+	}
+	local dlg = iup.dialog{ frame; title = "TableTree result", size = "600x200", menu = menu }
 	dlg:showxy(iup.CENTER,iup.CENTER)
 
 	oTree.m_sSelectName = ""
@@ -86,6 +97,7 @@ function Editor:Run()
 					GAME_APP:LoadStockHistoryData( sCode )
 					local tStockData = GAME_APP:GetStockHistoryData(sCode)
 					if tStockData ~= nil then
+						mat.NUMLIN = 0
 						mat.NUMLIN = #tStockData + 1
 						local nSize = #tStockData + 1
 						for i, v in pairs(tStockData) do
@@ -96,9 +108,9 @@ function Editor:Run()
 							mat:setcell( nSize-i,5,string.format("%s%%",v[8]) )
 							mat:setcell( nSize-i,6,v[7])
 							if tonumber(v[8]) < 0 then
-								mat[string.format("bgcolor%s:5",i)] = "0 255 0"
-							else
-								mat[string.format("bgcolor%s:5",i)] = "255 0 0"
+								mat[string.format("bgcolor%s:5",nSize-i)] = "0 255 0"
+							elseif tonumber(v[8]) > 0 then
+								mat[string.format("bgcolor%s:5",nSize-i)] = "255 0 0"
 							end
 						end
 					end
